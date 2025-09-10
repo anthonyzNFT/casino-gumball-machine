@@ -1,4 +1,4 @@
-const CACHE_NAME = 'casino-gumball-v2';
+const CACHE_NAME = 'casino-gumball-v4';
 const urlsToCache = [
     '/',
     '/index.html',
@@ -7,7 +7,8 @@ const urlsToCache = [
     '/assets/coin.png',
     '/assets/handle.svg',
     '/assets/icon-192.png',
-    '/assets/icon-512.png'
+    '/assets/icon-512.png',
+    '/assets/card-suits-engraving.png'
 ];
 
 self.addEventListener('install', (event) => {
