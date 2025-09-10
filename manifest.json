@@ -1,0 +1,21 @@
+// manifest.json (for PWA)
+{
+    "short_name": "Casino Gumball",
+    "name": "Casino Society Gumball Machine",
+    "icons": [
+        {
+            "src": "assets/icon-192.png",
+            "type": "image/png",
+            "sizes": "192x192"
+        },
+        {
+            "src": "assets/icon-512.png",
+            "type": "image/png",
+            "sizes": "512x512"
+        }
+    ],
+    "start_url": "/",
+    "background_color": "#000000",
+    "display": "standalone",
+    "theme_color": "#000000"
+}
