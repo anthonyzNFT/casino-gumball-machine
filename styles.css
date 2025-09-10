@@ -1,61 +1,52 @@
-/* Casino Theme Variables */
 :root {
-    --primary-bg: #000000; /* Solid black background */
-    --accent-color: #F5F5DC; /* Beige accents */
-    --neon-glow: #FFD700; /* Gold neon */
+    --primary-bg: #000000;
+    --accent-color: #F5F5DC;
+    --neon-glow: #FFD700;
     --text-color: var(--accent-color);
-    --font-family: 'Playfair Display', serif; /* Casino font */
-    --velvet-gradient: linear-gradient(to bottom, #800000, #000000); /* Maroon velvet for machine */
+    --font-family: 'Playfair Display', serif;
+    --metallic-gradient: linear-gradient(to bottom, #4A4A4A, #1C2526);
 }
 
-/* Solid Black Background */
 body {
     margin: 0;
     padding: 0;
     font-family: var(--font-family);
     background-color: var(--primary-bg);
     color: var(--text-color);
-    overflow: hidden; /* Prevent scroll on animations */
+    overflow: auto;
 }
 
 #casino-background {
     position: relative;
     width: 100vw;
-    height: 100vh;
-    background: var(--primary-bg); /* Solid black */
+    min-height: 100vh;
+    background: var(--primary-bg);
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
-/* Gumball Machine Styles */
+#machine-title {
+    font-size: 2.5em;
+    color: var(--accent-color);
+    text-shadow: 0 0 10px var(--neon-glow), 0 0 20px var(--neon-glow);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
 #gumball-machine {
     position: relative;
-    width: 400px; /* Scalable */
+    width: 400px;
     height: 600px;
-    border: 2px solid var(--neon-glow);
-    border-radius: 20px;
-    box-shadow: 0 0 20px var(--neon-glow), 0 0 40px rgba(255, 215, 0, 0.5); /* Enhanced glow */
-    background: var(--velvet-gradient); /* Velvet texture for machine */
-}
-
-/* Card Suit Animations (Background Decor) */
-#gumball-machine::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: url('assets/card-suits.png') repeat; /* Optional: repeating card suits pattern */
-    opacity: 0.1;
-    animation: floatSuits 20s linear infinite; /* Slow floating suits */
-}
-
-@keyframes floatSuits {
-    0% { background-position: 0 0; }
-    100% { background-position: 100px 100px; }
+    border: 3px solid var(--neon-glow);
+    border-radius: 15px;
+    box-shadow: 0 0 20px var(--neon-glow), 0 0 40px rgba(255, 215, 0, 0.3);
+    background: var(--metallic-gradient);
+    background-image: url('assets/card-suits-engraving.png');
+    background-size: 100px;
+    background-repeat: repeat;
 }
 
 .machine-dome {
@@ -65,15 +56,27 @@ body {
     width: 300px;
     height: 300px;
     border-radius: 50%;
-    background: transparent; /* Glass dome */
+    background: radial-gradient(circle, rgba(255,255,255,0.1), transparent);
     border: 5px solid var(--accent-color);
     overflow: hidden;
-    box-shadow: inset 0 0 20px var(--neon-glow); /* Inner glow */
+    box-shadow: inset 0 0 20px var(--neon-glow), 0 0 10px var(--neon-glow);
 }
 
 #gumball-canvas {
     width: 100%;
     height: 100%;
+}
+
+.chute {
+    position: absolute;
+    top: 310px;
+    left: 160px;
+    width: 30px;
+    height: 200px;
+    background: linear-gradient(to right, #333, #555);
+    border: 2px solid var(--accent-color);
+    border-radius: 5px;
+    z-index: 1;
 }
 
 #coin-slot {
@@ -82,12 +85,17 @@ body {
     left: 150px;
     width: 100px;
     height: 50px;
-    background: #444;
+    background: #333;
     border: 2px solid var(--neon-glow);
     text-align: center;
     line-height: 50px;
     font-size: 14px;
     color: var(--text-color);
+    transition: box-shadow 0.3s;
+}
+
+#coin-slot.dragover {
+    box-shadow: 0 0 15px var(--neon-glow);
 }
 
 #handle {
@@ -96,8 +104,9 @@ body {
     right: 20px;
     width: 50px;
     height: 100px;
-    background: url('assets/handle.svg') no-repeat center/cover; /* SVG for handle */
+    background: url('assets/handle.svg') no-repeat center/cover;
     cursor: pointer;
+    transition: transform 0.3s;
 }
 
 #tray {
@@ -111,19 +120,25 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: inset 0 0 10px var(--neon-glow);
 }
 
 #virtual-coin {
     position: absolute;
-    top: -100px; /* Hidden initially */
+    top: 50px;
+    left: 175px;
     width: 50px;
     height: 50px;
     cursor: grab;
     border-radius: 50%;
     box-shadow: 0 0 10px var(--neon-glow);
+    transition: box-shadow 0.3s;
 }
 
-/* Controls */
+#virtual-coin.dragging {
+    box-shadow: 0 0 20px var(--neon-glow);
+}
+
 #controls {
     display: flex;
     gap: 10px;
@@ -132,7 +147,7 @@ body {
 
 button {
     padding: 10px 20px;
-    background: var(--accent-color); /* Beige buttons */
+    background: var(--accent-color);
     color: #000;
     border: none;
     border-radius: 5px;
@@ -152,71 +167,91 @@ button:disabled {
     cursor: not-allowed;
 }
 
-/* Displays */
-#wallet, #points, #inventory {
+#wallet {
     margin: 10px;
     font-size: 18px;
+    text-shadow: 0 0 5px var(--neon-glow);
 }
 
-#prize-inventory {
+#prizes-won {
     margin-top: 20px;
     background: #333;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 0 10px var(--neon-glow);
+    width: 400px;
+    max-width: 90%;
 }
 
-#prize-inventory h2 {
+#prizes-won h2 {
     text-align: center;
+    margin-top: 0;
 }
 
 #prize-list {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 10px;
 }
 
 .prize-item {
-    width: 80px;
-    height: 80px;
     background: #444;
     border: 2px solid var(--neon-glow);
-    border-radius: 10px;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 16px;
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.prize-item:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px var(--neon-glow);
+}
+
+#prize-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
-    text-align: center;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
-}
-
-/* Slot Machine Animation for Prize Reveal */
-#slot-machine-reveal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 300px;
-    height: 100px;
-    background: #222;
-    border: 2px solid var(--neon-glow);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    color: var(--text-color);
-    box-shadow: 0 0 20px var(--neon-glow);
     z-index: 1000;
 }
 
-/* Responsiveness */
+.popup-content {
+    background: #222;
+    border: 3px solid var(--neon-glow);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 0 20px var(--neon-glow);
+    max-width: 400px;
+    width: 90%;
+}
+
+.popup-content h2 {
+    margin-top: 0;
+    color: var(--accent-color);
+    text-shadow: 0 0 5px var(--neon-glow);
+}
+
+.popup-content p {
+    font-size: 18px;
+    margin: 10px 0;
+}
+
+.popup-content button {
+    margin: 10px 5px;
+}
+
 @media (max-width: 600px) {
+    #machine-title {
+        font-size: 1.8em;
+    }
     #gumball-machine {
         width: 300px;
         height: 450px;
@@ -225,6 +260,12 @@ button:disabled {
         width: 200px;
         height: 200px;
         left: 50px;
+    }
+    .chute {
+        top: 210px;
+        left: 110px;
+        width: 25px;
+        height: 150px;
     }
     #coin-slot {
         top: 220px;
@@ -248,14 +289,7 @@ button:disabled {
         padding: 8px 16px;
         font-size: 14px;
     }
-    #slot-machine-reveal {
-        width: 250px;
-        font-size: 18px;
+    .popup-content {
+        max-width: 300px;
     }
-}
-
-/* Accessibility: High Contrast Mode (optional, toggle via JS if added later) */
-.high-contrast {
-    --text-color: #FFFFFF;
-    --accent-color: #FFFF00;
 }
