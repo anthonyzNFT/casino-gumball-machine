@@ -1,4 +1,3 @@
-// manifest.json (for PWA)
 {
     "short_name": "Casino Gumball",
     "name": "Casino Society Gumball Machine",
@@ -8,6 +7,7 @@
             "type": "image/png",
             "sizes": "192x192"
         },
+       პ
         {
             "src": "assets/icon-512.png",
             "type": "image/png",
