@@ -1,0 +1,82 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Casino Society Gumball Machine - A luxurious casino-themed interactive web app.">
+    <title>Casino Society Gumball Machine</title>
+    <!-- Favicon (optional: user can add their own) -->
+    <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
+    <!-- Google Fonts for casino-style font -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- Libraries via CDN -->
+    <!-- GSAP for animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <!-- Matter.js for physics -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <!-- Canvas Confetti for jackpot effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.min.js"></script>
+    <!-- Manifest for PWA -->
+    <link rel="manifest" href="manifest.json">
+    <!-- Theme color for PWA -->
+    <meta name="theme-color" content="#000000">
+</head>
+<body>
+    <!-- Main container with casino background -->
+    <div id="casino-background">
+        <!-- Gumball Machine Container -->
+        <div id="gumball-machine">
+            <!-- Dome with canvas for dynamic gumballs -->
+            <div class="machine-dome">
+                <canvas id="gumball-canvas"></canvas>
+            </div>
+            <!-- Coin Slot -->
+            <div id="coin-slot">Insert Coin Here</div>
+            <!-- Handle -->
+            <div id="handle" class="handle"></div>
+            <!-- Dispense Tray -->
+            <div id="tray" class="tray"></div>
+            <!-- Virtual Coin for drag (initially hidden) -->
+            <img id="virtual-coin" src="assets/coin.png" alt="Poker Chip Coin" draggable="true">
+        </div>
+        <!-- Controls -->
+        <div id="controls">
+            <button id="insert-coin-btn">Insert Coin</button>
+            <button id="turn-handle-btn" disabled>Turn Handle</button>
+            <button id="refill-btn" disabled>Refill Machine</button>
+            <button id="mute-btn">Mute</button>
+            <button id="dark-mode-toggle">Toggle Dark Mode</button>
+        </div>
+        <!-- Displays -->
+        <div id="wallet">Coins: <span id="coin-count">10</span></div>
+        <div id="points">Points: <span id="point-count">0</span></div>
+        <div id="inventory">Gumballs Collected: <span id="gumball-count">0</span></div>
+        <!-- Leaderboard -->
+        <div id="leaderboard">
+            <h2>High Scores</h2>
+            <ul id="leaderboard-list"></ul>
+        </div>
+        <!-- Audio Elements -->
+        <audio id="coin-clink" src="assets/clink.mp3"></audio>
+        <audio id="crank-sound" src="assets/crank.ogg"></audio>
+        <audio id="gumball-bounce" src="assets/bounce.mp3"></audio>
+        <audio id="jackpot-fanfare" src="assets/fanfare.mp3"></audio>
+        <audio id="background-music" loop src="assets/casino-lounge.mp3"></audio>
+    </div>
+    <!-- Service Worker for PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('Service Worker registered!', reg))
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+    <!-- Main Script -->
+    <script src="script.js"></script>
+</body>
+</html>
