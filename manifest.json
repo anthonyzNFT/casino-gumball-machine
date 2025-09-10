@@ -1,29 +1,21 @@
-const CACHE_NAME = 'casino-gumball-v2';
-const urlsToCache = [
-    '/',
-    '/index.html',
-    '/styles.css',
-    '/script.js',
-    '/assets/coin.png',
-    '/assets/handle.svg',
-    '/assets/icon-192.png',
-    '/assets/icon-512.png'
-];
-
-self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then((cache) => {
-                return cache.addAll(urlsToCache);
-            })
-    );
-});
-
-self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        caches.match(event.request)
-            .then((response) => {
-                return response || fetch(event.request);
-            })
-    );
-});
+{
+    "short_name": "Casino Gumball",
+    "name": "Casino Society Gumball Machine",
+    "icons": [
+        {
+            "src": "assets/icon-192.png",
+            "type": "image/png",
+            "sizes": "192x192"
+        },
+       პ
+        {
+            "src": "assets/icon-512.png",
+            "type": "image/png",
+            "sizes": "512x512"
+        }
+    ],
+    "start_url": "/",
+    "background_color": "#000000",
+    "display": "standalone",
+    "theme_color": "#000000"
+}
