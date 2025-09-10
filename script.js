@@ -1,68 +1,72 @@
-// Expert-level code with extensive comments for user customization
-
 // Global Variables
-let coins = parseInt(localStorage.getItem('coins')) || 10; // Start with 10 coins
-let points = parseInt(localStorage.getItem('points')) || 0;
-let prizesWon = 0;
-let inventory = 50; // Initial gumballs in machine
+let coins = parseInt(localStorage.getItem('coins')) || 10;
+let prizesWon = 0; // Session-based, reset on refresh
+let inventory = 9999; // Perpetually filled for testing
 let coinInserted = false;
-let prizes = JSON.parse(localStorage.getItem('prizes')) || []; // Store prizes
+let prizes = []; // Session-based prize list
 
 // Elements
 const coinCountEl = document.getElementById('coin-count');
-const pointCountEl = document.getElementById('point-count');
 const prizeCountEl = document.getElementById('prize-count');
 const insertBtn = document.getElementById('insert-coin-btn');
 const turnBtn = document.getElementById('turn-handle-btn');
-const refillBtn = document.getElementById('refill-btn');
 const trayEl = document.getElementById('tray');
 const virtualCoin = document.getElementById('virtual-coin');
 const handleEl = document.getElementById('handle');
 const prizeList = document.getElementById('prize-list');
+const prizePopup = document.getElementById('prize-popup');
+const prizeMessage = document.getElementById('prize-message');
+const sharePrizeBtn = document.getElementById('share-prize-btn');
+const closePopupBtn = document.getElementById('close-popup-btn');
 
 // Prize Types
 const prizeTypes = [
-    { name: 'Casino Chip', value: 10, rarity: 'common', color: '#FF0000' },
-    { name: 'Ace of Spades', value: 20, rarity: 'uncommon', color: '#800080' },
-    { name: 'Golden Voucher', value: 50, rarity: 'rare', color: '#FFD700' }
+    { name: '$CASINO Tokens', value: 10, color: '#FF0000' }, // Common
+    { name: '$CASINO Tokens', value: 50, color: '#800080' }, // Uncommon
+    { name: 'Casino Society NFT', value: 'NFT #1', color: '#FFD700' } // Rare
 ];
 
-// Matter.js Physics Setup for Gumball Fall
+// Matter.js Physics Setup for Gumball Dome
 let engine, render, runner, world;
 function initPhysics() {
-    engine = Matter.Engine.create();
-    world = engine.world;
-    render = Matter.Render.create({
-        canvas: document.getElementById('gumball-canvas'),
-        engine: engine,
-        options: {
-            width: 300,
-            height: 300,
-            background: 'transparent',
-            wireframes: false
+    try {
+        engine = Matter.Engine.create();
+        world = engine.world;
+        render = Matter.Render.create({
+            canvas: document.getElementById('gumball-canvas'),
+            engine: engine,
+            options: {
+                width: 300,
+                height: 300,
+                background: 'transparent',
+                wireframes: false
+            }
+        });
+        runner = Matter.Runner.create();
+        Matter.Runner.run(runner, engine);
+        Matter.Render.run(render);
+
+        // Dome boundaries (curved walls approximated with rectangles)
+        Matter.World.add(world, [
+            Matter.Bodies.rectangle(150, 290, 300, 20, { isStatic: true, render: { visible: false } }),
+            Matter.Bodies.rectangle(10, 150, 20, 300, { isStatic: true, render: { visible: false } }),
+            Matter.Bodies.rectangle(290, 150, 20, 300, { isStatic: true, render: { visible: false } })
+        ]);
+
+        // Initial Gumballs (visual pile, capped for performance)
+        for (let i = 0; i < Math.min(inventory, 50); i++) {
+            addGumball(Math.random() * 250 + 25, Math.random() * 50 + 50);
         }
-    });
-    runner = Matter.Runner.create();
-    Matter.Runner.run(runner, engine);
-    Matter.Render.run(render);
-
-    // Add static walls for dome (simplified)
-    Matter.World.add(world, [
-        Matter.Bodies.rectangle(150, 290, 300, 20, { isStatic: true }), // Bottom
-        Matter.Bodies.rectangle(10, 150, 20, 300, { isStatic: true }), // Left
-        Matter.Bodies.rectangle(290, 150, 20, 300, { isStatic: true }) // Right
-    ]);
-
-    // Initial Gumballs (pile up)
-    for (let i = 0; i < inventory; i++) {
-        addGumball(Math.random() * 250 + 25, Math.random() * -100 - 50); // Drop from top
+    } catch (error) {
+        console.error('Physics initialization failed:', error);
     }
 }
 
-// Add a gumball body
+// Add Gumball
 function addGumball(x, y, color = getRandomColor()) {
     const gumball = Matter.Bodies.circle(x, y, 10, {
-        restitution: 0.5, // Bouncy
+        restitution: 0.3, // Less bouncy for realistic piling
+        friction: 0.1,
         render: { fillStyle: color }
     });
     Matter.World.add(world, gumball);
@@ -72,173 +76,214 @@ function addGumball(x, y, color = getRandomColor()) {
 // Random Color with Rarity
 function getRandomColor() {
     const rand = Math.random();
-    if (rand < 0.05) return '#FFD700'; // Golden rare
-    if (rand < 0.3) return '#800080'; // Purple uncommon
-    const commons = ['#FF0000', '#0000FF', '#008000', '#FFFF00']; // Red, Blue, Green, Yellow
+    if (rand < 0.05) return '#FFD700'; // Rare
+    if (rand < 0.3) return '#800080'; // Uncommon
+    const commons = ['#FF0000', '#0000FF', '#008000', '#FFFF00'];
     return commons[Math.floor(Math.random() * commons.length)];
 }
 
 // Get Prize from Color
 function getPrizeFromColor(color) {
-    if (color === '#FFD700') return prizeTypes[2]; // Golden Voucher
-    if (color === '#800080') return prizeTypes[1]; // Ace of Spades
-    return prizeTypes[0]; // Casino Chip
+    if (color === '#FFD700') return prizeTypes[2];
+    if (color === '#800080') return prizeTypes[1];
+    return prizeTypes[0];
 }
 
 // Update Displays
 function updateDisplays() {
     coinCountEl.textContent = coins;
-    pointCountEl.textContent = points;
     prizeCountEl.textContent = prizesWon;
     localStorage.setItem('coins', coins);
-    localStorage.setItem('points', points);
-    localStorage.setItem('prizes', JSON.stringify(prizes));
-    // Update Prize Inventory
     prizeList.innerHTML = prizes.map((prize, index) => `
-        <div class="prize-item" style="background: ${prize.color}" data-index="${index}">
-            ${prize.name}<br>Value: ${prize.value}
+        <div class="prize-item" style="background: ${prize.color}" role="presentation" aria-label="Prize: ${prize.name}, value ${prize.value}">
+            ${prize.name}: ${prize.value}
         </div>
     `).join('');
 }
 
-// Insert Coin Logic
-function insertCoin() {
-    if (coins > 0) {
-        coins--;
-        coinInserted = true;
-        turnBtn.disabled = false;
-        // Animate coin fall with GSAP
-        gsap.to(virtualCoin, { y: 200, duration: 1, ease: 'bounce.out', onComplete: () => virtualCoin.style.top = '-100px' });
-        updateDisplays();
-    } else {
-        alert('No coins left! Earn more via daily login or mini-games.'); // Placeholder for earning
-    }
+// Show Prize Pop-up
+function showPrizePopup(prize) {
+    prizeMessage.textContent = `You won: ${prize.name} (${prize.value})!`;
+    prizePopup.style.display = 'flex';
+    gsap.fromTo(prizePopup, 
+        { scale: 0, opacity: 0 }, 
+        { scale: 1, opacity: 1, duration: 0.5, ease: 'elastic.out' }
+    );
+    confetti({
+        particleCount: prize.color === '#FFD700' ? 200 : 100,
+        spread: prize.color === '#FFD700' ? 100 : 70,
+        colors: [prize.color, '#FFD700']
+    });
+    navigator.vibrate && navigator.vibrate(prize.color === '#FFD700' ? [200, 100, 200] : 200);
 }
 
-// Slot Machine Animation for Prize Reveal
-function showSlotMachineReveal(prize) {
-    let slotEl = document.getElementById('slot-machine-reveal');
-    if (!slotEl) {
-        slotEl = document.createElement('div');
-        slotEl.id = 'slot-machine-reveal';
-        document.body.appendChild(slotEl);
+// Insert Coin Logic
+function insertCoin() {
+    if (coins <= 0) {
+        alert('No coins left! Please add more coins to continue.');
+        return;
     }
-    slotEl.style.display = 'block';
-    let count = 0;
-    const words = ['Spin!', 'Win!', prize.name];
-    const interval = setInterval(() => {
-        slotEl.textContent = words[count % words.length];
-        count++;
-        if (count > 10) { // Simulate slot spin for ~2 seconds
-            clearInterval(interval);
-            slotEl.textContent = `You won: ${prize.name}!`;
-            gsap.to(slotEl, { scale: 1.2, duration: 0.5, yoyo: true, repeat: 1, onComplete: () => {
-                gsap.to(slotEl, { opacity: 0, duration: 0.5, onComplete: () => slotEl.style.display = 'none' });
-            }});
-            // Enhanced confetti for rare prizes
-            confetti({
-                particleCount: prize.rarity === 'rare' ? 200 : 100,
-                spread: prize.rarity === 'rare' ? 100 : 70,
-                colors: [prize.color, '#FFD700']
-            });
-            navigator.vibrate && navigator.vibrate(200); // Vibration
+    coins--;
+    coinInserted = true;
+    turnBtn.disabled = false;
+    console.log('Coin inserted, coins left:', coins);
+    gsap.to(virtualCoin, {
+        y: 200,
+        x: 0,
+        duration: 1,
+        ease: 'bounce.out',
+        onStart: () => virtualCoin.classList.add('dragging'),
+        onComplete: () => {
+            virtualCoin.classList.remove('dragging');
+            virtualCoin.style.top = '50px';
+            virtualCoin.style.left = '175px';
         }
-    }, 200);
+    });
+    updateDisplays();
 }
 
 // Turn Handle Logic
 function turnHandle() {
-    if (coinInserted && inventory > 0) {
-        coinInserted = false;
-        turnBtn.disabled = true;
-        // Animate handle with GSAP
-        gsap.to(handleEl, { rotation: 360, duration: 1, ease: 'power2.inOut', onComplete: dispenseGumball });
-        // Machine shake with glow
-        gsap.to('#gumball-machine', { 
-            x: 5, 
-            duration: 0.1, 
-            repeat: 5, 
-            yoyo: true,
-            boxShadow: '0 0 30px var(--neon-glow)'
-        });
-    } else if (inventory <= 0) {
-        alert('Out of stock! Refill the machine.');
-        refillBtn.disabled = false;
+    if (!coinInserted) {
+        alert('Insert a coin first!');
+        return;
     }
+    coinInserted = false;
+    turnBtn.disabled = true;
+    console.log('Handle turned, dispensing gumball...');
+    gsap.to(handleEl, {
+        rotation: 360,
+        duration: 1,
+        ease: 'power2.inOut',
+        onComplete: () => {
+            handleEl.style.transform = 'rotate(0deg)';
+            dispenseGumball();
+        }
+    });
+    gsap.to('#gumball-machine', {
+        x: 5,
+        duration: 0.1,
+        repeat: 5,
+        yoyo: true,
+        boxShadow: '0 0 30px var(--neon-glow)'
+    });
 }
 
 // Dispense Gumball and Award Prize
 function dispenseGumball() {
     inventory--;
-    if (inventory <= 0) refillBtn.disabled = false;
-    const gumball = addGumball(150, 0); // From top center
-    // Simulate fall to tray (remove from world after fall)
-    setTimeout(() => {
-        Matter.World.remove(world, gumball);
-        const color = gumball.render.fillStyle;
-        const prize = getPrizeFromColor(color);
-        points += prize.value;
-        prizesWon++;
-        prizes.push(prize);
-        updateDisplays();
-        // Show slot machine reveal
-        showSlotMachineReveal(prize);
-        // Add to tray (visual only, auto-collected)
-        const prizeEl = document.createElement('div');
-        prizeEl.className = 'prize-item';
-        prizeEl.style.background = color;
-        prizeEl.textContent = prize.name;
-        trayEl.appendChild(prizeEl);
-        gsap.from(prizeEl, { scale: 0, duration: 0.5, ease: 'elastic.out' });
-        setTimeout(() => prizeEl.remove(), 2000); // Remove from tray after animation
-    }, 2000); // Time for fall
-}
-
-// Refill Machine
-function refill() {
-    inventory = 50;
-    for (let i = 0; i < 50; i++) {
-        addGumball(Math.random() * 250 + 25, Math.random() * -100 - 50);
-    }
-    refillBtn.disabled = true;
-    // Animation: swirl lights
-    gsap.to('.machine-dome', { borderColor: '#FF0000', duration: 0.5, repeat: 3, yoyo: true });
+    const color = getRandomColor();
+    const gumball = addGumball(150, 0, color);
+    // Animate gumball through chute
+    gsap.to(gumball, {
+        x: 160,
+        y: 200,
+        duration: 1.5,
+        ease: 'power1.inOut',
+        onUpdate: () => {
+            Matter.Body.setPosition(gumball, { x: gumball.position.x, y: gumball.position.y });
+        },
+        onComplete: () => {
+            try {
+                Matter.World.remove(world, gumball);
+                const prize = getPrizeFromColor(color);
+                prizesWon++;
+                prizes.push(prize);
+                updateDisplays();
+                // Add gumball to tray
+                const gumballEl = document.createElement('div');
+                gumballEl.className = 'prize-item';
+                gumballEl.style.background = color;
+                gumballEl.style.width = '20px';
+                gumballEl.style.height = '20px';
+                gumballEl.style.borderRadius = '50%';
+                trayEl.appendChild(gumballEl);
+                gsap.from(gumballEl, { scale: 0, duration: 0.5, ease: 'elastic.out' });
+                setTimeout(() => {
+                    gsap.to(gumballEl, { 
+                        scale: 0, 
+                        opacity: 0, 
+                        duration: 0.5, 
+                        onComplete: () => {
+                            gumballEl.remove();
+                            showPrizePopup(prize);
+                        }
+                    });
+                }, 1000);
+            } catch (error) {
+                console.error('Dispense error:', error);
+            }
+        }
+    });
 }
 
 // Drag Coin Setup
-virtualCoin.addEventListener('dragstart', (e) => {
-    e.dataTransfer.setData('text', 'coin');
-});
-document.getElementById('coin-slot').addEventListener('dragover', (e) => e.preventDefault());
-document.getElementById('coin-slot').addEventListener('drop', () => insertCoin());
+function setupDrag() {
+    virtualCoin.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', 'coin');
+        virtualCoin.classList.add('dragging');
+    });
+    virtualCoin.addEventListener('dragend', () => {
+        virtualCoin.classList.remove('dragging');
+    });
+    const coinSlot = document.getElementById('coin-slot');
+    coinSlot.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        coinSlot.classList.add('dragover');
+    });
+    coinSlot.addEventListener('dragleave', () => {
+        coinSlot.classList.remove('dragover');
+    });
+    coinSlot.addEventListener('drop', (e) => {
+        e.preventDefault();
+        coinSlot.classList.remove('dragover');
+        insertCoin();
+    });
+}
+
+// Social Sharing
+function sharePrize(prize) {
+    if (navigator.share) {
+        navigator.share({
+            title: 'Casino Society Prize',
+            text: `I won ${prize.name} (${prize.value}) on the Casino Society Gumball Machine!`,
+            url: window.location.href
+        }).catch(error => console.error('Share error:', error));
+    } else {
+        alert('Sharing not supported on this browser. Copy the URL to share your prize!');
+    }
+}
 
 // Event Listeners
 insertBtn.addEventListener('click', insertCoin);
 turnBtn.addEventListener('click', turnHandle);
-refillBtn.addEventListener('click', refill);
-
-// Keyboard Navigation
+closePopupBtn.addEventListener('click', () => {
+    gsap.to(prizePopup, {
+        scale: 0,
+        opacity: 0,
+        duration: 0.5,
+        ease: 'power2.in',
+        onComplete: () => prizePopup.style.display = 'none'
+    });
+});
+sharePrizeBtn.addEventListener('click', () => {
+    const latestPrize = prizes[prizes.length - 1];
+    sharePrize(latestPrize);
+});
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') insertCoin();
     if (e.key === ' ') turnHandle();
+    if (e.key === 'Escape' && prizePopup.style.display === 'flex') {
+        closePopupBtn.click();
+    }
 });
 
 // Init
 window.addEventListener('load', () => {
+    console.log('Initializing gumball machine...');
     initPhysics();
+    setupDrag();
     updateDisplays();
-    // Daily Login Bonus (simple)
-    const lastLogin = localStorage.getItem('lastLogin');
-    const today = new Date().toDateString();
-    if (lastLogin !== today) {
-        coins += 5;
-        localStorage.setItem('lastLogin', today);
-        updateDisplays();
-        alert('Daily bonus: +5 coins!');
-    }
-    // ARIA Labels
-    insertBtn.setAttribute('aria-label', 'Insert virtual coin');
-    turnBtn.setAttribute('aria-label', 'Turn the handle to dispense prize');
     // Easter Egg: Press 'G' for bonus coin
     document.addEventListener('keydown', (e) => {
         if (e.key === 'g') {
@@ -248,7 +293,3 @@ window.addEventListener('load', () => {
         }
     });
 });
-
-// Extensibility: Add Firebase here for real prize tracking
-// e.g., import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-// Then use Firestore for prizes.
