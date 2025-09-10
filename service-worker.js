@@ -1,5 +1,4 @@
-// service-worker.js (basic for PWA offline)
-const CACHE_NAME = 'casino-gumball-v1';
+const CACHE_NAME = 'casino-gumball-v2';
 const urlsToCache = [
     '/',
     '/index.html',
@@ -7,12 +6,8 @@ const urlsToCache = [
     '/script.js',
     '/assets/coin.png',
     '/assets/handle.svg',
-    '/assets/clink.mp3',
-    '/assets/crank.ogg',
-    '/assets/bounce.mp3',
-    '/assets/fanfare.mp3',
-    '/assets/casino-lounge.mp3'
-    // Add more assets
+    '/assets/icon-192.png',
+    '/assets/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
